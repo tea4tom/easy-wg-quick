@@ -83,7 +83,7 @@ Promote your session with su to do this then
 
 Or clone repository.
 
-    git clone https://github.com/burghardt/easy-wg-quick.git
+    git clone https://github.com/tea4tom/wg-cerberus-easy-wg-quick.git
 
 ## Usage
 
