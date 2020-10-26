@@ -77,7 +77,7 @@ installed in the /usr/bin/wg-cerberus
 
 Promote your session with su to do this then
 
-    wget https://raw.githubusercontent.com/burghardt/easy-wg-quick/master/easy-wg-quick
+    wget https://raw.githubusercontent.com/tea4tom/wg-cerberus-easy-wg-quick/master/wg-cerberus
     mv wg-cerberus /usr/bin/
     chmod +x /usr/bin/wg-cerberus
 
