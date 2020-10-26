@@ -1,4 +1,4 @@
-# easy-wg-quick
+# wg-cerberus [alias of: easy-wg-quick]
 easy-wg-quick - Creates Wireguard configuration for hub and peers with ease
 
  * [Getting Started](#getting-started)
@@ -29,6 +29,10 @@ These instructions will get you a copy of the project up and running on your
 local machine. This machine (called hub) will act as VPN concentrator. All
 other peers connects to hub (as in a "road warrior" configuration).
 
+This version of the script 'wg-cerberus' has been designed for an Alpine linux
+router install. For that reason the IP table / routing rules have been removed 
+as the configuration should already be configured.
+
 ### Prerequisites
 
 Install [Wireguard] for your operating system on [local machine], [router],
@@ -40,6 +44,10 @@ should be available on hub. If `ip` is not available user is required to set
 name and IP address (or edit `wghub.conf`). Optionally `qrencode` can be used
 to generate [QR codes] for mobile applications.
 
+#### Alpine Linux (Router)
+    
+    apk add wireguard-tools libqrencode
+    
 #### Debian, Ubuntu
 
     sudo apt install wireguard-tools mawk grep iproute2 qrencode
@@ -64,13 +72,14 @@ Peers also requires Wireguard installed. [Android] and [iOS] are supported.
 
 Just download the script and make it executable with `chmod`.
 
+When using Alpine linux there is no sudo command by default and the script is designed to be 
+installed in the /usr/bin/wg-cerberus
+
+Promote your session with su to do this then
+
     wget https://raw.githubusercontent.com/burghardt/easy-wg-quick/master/easy-wg-quick
-    chmod +x easy-wg-quick
-
-Note that you can use a short URL as well.
-
-    wget https://git.io/fjb5R -O easy-wg-quick
-    chmod +x easy-wg-quick
+    mv wg-cerberus /usr/bin/
+    chmod +x /usr/bin/wg-cerberus
 
 Or clone repository.
 
@@ -78,91 +87,58 @@ Or clone repository.
 
 ## Usage
 
+The script usage is slightly modified to that of easy-wg-quick although the 
+functionality is basically the same.
+
 Script do not require any arguments. Just run it and it will create usable
 Wireguard configuration for hub and one peer. Any sequential invocation creates
 another peer configuration within same hub.
 
-    ./easy-wg-quick # 1st run creates hub configuration and one client
-    ./easy-wg-quick # any other runs creates additional clients
+    ./wg-cerberus # 1st run creates hub configuration
+    ./wg-cerberus # any other runs creates additional clients
 
-Passing an argument to script creates configuration file with name instead of
+The hub configuration has a structure within the /etc/wireguard directory, 
+in the root you will find the configuration file 'wg0.conf' and two sub 
+directories 'ext' and 'peers'. The first stores all the extra configuration 
+that gets shared amongst peers, and the latter keeps the peers config files 
+and output data.
+
+Passing an argument to script creates peer directory with name instead of
 sequence number to help remembering which config was for which device.
-Following command will create `wgclient_client_name.conf` file.
+Following command will create `/etc/wireguard/{peer_name}/` file.
 
-    ./easy-wg-quick client_name
+    ./wg-cerberus peer_name
 
-### Sample output
+### Sample setup commands
 
 ```
-No seqno.txt... creating one!
-No wgpsk.key... creating one!
-No wghub.key... creating one!
-No wghub.conf... creating one!
-Wireguard hub address is 10.13.1.140:51820 on wlp9s0.
-Note: customize [Interface] section of wghub.conf if required!
+ apk add wireguard-tools libqrencode
 
-Note: passing argument to script creates client configuration with supplied
-      name to help remembering which config was for which device. If you
-      didn't pass any argument you can still rename created file manually
-      with command:
-  mv -vi wgclient_10.conf wgclient_name.conf
+ wget https://raw.githubusercontent.com/burghardt/easy-wg-quick/master/easy-wg-quick
+ mv wg-cerberus /usr/bin/
+ chmod +x /usr/bin/wg-cerberus
+ 
+ wg-cerberus --setup # install config and directory structure
+ 
+ wg-cerberus tom # create a peer in the peers directory /tom/*
+ 
+ wg-cerberus richard # create another peer in the peers directory /richard/*
+ 
+ wg-cerberus harry # create another peer in the peers directory /harry/*
 
-No wgclient_10.conf... creating one!
-█████████████████████████████████████████████████████████████████████████
-█████████████████████████████████████████████████████████████████████████
-████ ▄▄▄▄▄ █▀██ ▀▄▀▄█▄ ▀▄ █▀▀▄█▄▄▀ ▄▀██▀▀▀▀█▄  █▀▀▄█  ▄▀▀ █▄▀█ ▄▄▄▄▄ ████
-████ █   █ █▀▄▀ ▀█▀▄▄▄ ▄ ▀█ ▄██▄█ ▀▀▄ ███▀▀▄▄  ▀ ▄▄▀███▄▀▀ ▀▄█ █   █ ████
-████ █▄▄▄█ █▀▀▀██▀▄██  ▀▄███▀▀▀▀▄▄ ▄▄▄ ▄  ▀██  ▄█▀▀  █▀██▄▀█▄█ █▄▄▄█ ████
-████▄▄▄▄▄▄▄█▄█▄▀ ▀▄▀▄▀ ▀▄▀▄█ █▄█ █ █▄█ █ █ ▀ ▀▄█ ▀▄▀ ▀▄▀ ▀▄█▄█▄▄▄▄▄▄▄████
-████▄▄   █▄ ▄ ██ ▄▄▄█ ▀█▀▄ ▀▄█▄▄█▄▄   ▄   █ █▀▄▀▄▀█▄▀▄▀▀▄▄ █▄ ▀▄▀ ▀ █████
-█████▀ ▄▀▀▄▀▀▄█▀  █▀ ▀▀▄▀█▄█▄ ▄▀▀▄▄▄█ ▄▀▀█ ▄ ▀▀▄ ▄▄▄ ▀ █▀▀▀██▀▄█ ▄███████
-████ ▄███ ▄▀█▄▀█▄▀ ███▀▀▀▀▀▀▄ ▄   ▀ ██▀  ▄███ ▄ ▀ ▀ ▄▄▀▄█▀▄▀▀ █▀ ▄▄▀ ████
-█████▀  ▀▀▄ ▄▀▄▀▄██▄█  ▀ ▀▄▀█ █ █▀▀▄ ▀█▀▄▀█▀▀▄▄█▀ ██▀█▄▄▀█▄ ▀  ▀██▀▄▀████
-████▀▄▄▀▀ ▄▄▄▄▄█ ▀█  ▀▀ ▀█ █▀█ ▀▀▄ ▀█▀██▀█ ▄▀▀▀▀▄▀   █▀▄▄▄ █ ▀▀▀ ▄▄ █████
-████▀▄▄██ ▄▀▀▀▀█▄▄▄ ▀▄█ ▀▀ ▄▄▄ █▀▄   █▄▄ ▄███▀▄▀██   ▀▀██ ▄ ▀▄  ▄██▀▄████
-████▄  ███▄  ▀▄█   ▄▀▄▀▀▀▀▄▀▀▄▄▀   ▄ ▄▄▄▀▄▄█▄▄ ▀█▄▄▀▀▀▄▄▄▀ ▀▄██▀ ▄▄  ████
-████ █▄▀▀ ▄██▀▄ █▄▀▄ ▀ █▀ ▄ ▄██▀█ ▄ ██▀▄▄▀   █ ▄▄█  ▀▀  ▄▀█ ▄ ██ ▀▀▄▄████
-████   ▄ ▀▄▄▄█▄█▀█▄ ▀▀▀ ▀▀▄▄█  ▀▄▀██ ▀▄█  █ █▄  █▀▀▀  ▀██  ▀▀ ▀▄▀ ██▀████
-█████▄ ▀▄▀▄█▄ ▄▄▀█ ▄█   █▄▄▀ ▄▄▀█  ▄█▄▄▄ ▀▀▀▀ ▄▄  █ ▀▄█▄ ▄▄▀▀ █ ▀▄▀▄▄████
-████ █▀█▀▄▄▀▀▄ ███ ▀█▀▀▄█▄ ▄  ▄███▀▄▄▀▀  ▀▀▀▀ ▄ █▄▀▄▄▄▀▄▀  ██ █▀ █  ▀████
-█████▄▄█ ▄▄▄  █ ▄  ▀█▀ ▄█▀█▄  █▀▄▄ ▄▄▄ ▄  █▄█▄ ██▀▄█▀██▀   ▄ ▄▄▄ ▀▀▄█████
-████▀█▀▄ █▄█ █▄█▄▀▀█ █▄▄  ▀███▀███ █▄█  ▄▄▄▀▀█ ▄██▀▀ ▀▀▄▄▄▄▄ █▄█ ██▄▀████
-████   ▀ ▄▄  ▀█ ▄█  █▀ ▄█▄█▄▄▀████ ▄  ▄ ▄▄▄███▄▀██▄▄▄▄▄▀▄▄██ ▄ ▄▄▄█ ▄████
-████ ▀ ▄▄ ▄ ▄▄ ▄▀▄█▄▀▀  █▄█▀ ▀█▀▀█ █▀██▀▀███▄▀▀▀█▄█▀  ▄█▄  ▄█▄█▀▄   ▀████
-████▄▀▄▄▀▄▄█▀▄▄ █▄▄█▀  ▄▀▀█▄ ▄█▀██  ███ █▄▄█▀█▄▀▀▄ ▀▄▀▄ ▀██ ▀▀    ▀▀▄████
-████  ▄▀▄▀▄▀ ▄▀▄ ▄  ▀█▄█  ▀▀▄█▄▀█▀▀▄██▀  ▄▀▀▄ ▄█▄██▀ ▄█▄▄▄ ▀ ██▄▀██▀▄████
-████▀█ ▄█▄▄▄▄██▄ ▄▄▄█  ▄▀▄▄█▄█▄▀▀▀ █▀ █▀▀▄▀█▀█▀█▀▄█▄ ▀█▄█▀ ▀▄█▄█ ▄▀ ▄████
-████▄▀▀█▄▄▄▀▀█▄ ▀█ ▄▀▄ ▀▀█▄▀▄▄▄ ▄▀ ▀▀▀▄▀█ █▀█  ▄▀ ▀█▄ ▀▀█▀▄▄█ █▄█▄██▀████
-████▀█▀▄ ▀▄▄  █▄ ▀█▄   ▀ ▄▄▀█▀█▀▄██▀▄  ▄█▀█▀██▀ ▀▄█  ▀██▀▄█▄█▀ █ █▀ █████
-█████ █ ▄▄▄ █▀  ▀██ ▀▄ ▄  █████▀█ ▄▀ ▄▄▄█ ▄▄█▄▄ ▄ ▄▄▄█▀▄▄▄▄▄▄▀ ▄█▄▄ █████
-████▄█▄ ▄▀▄  ▄▀█▀██▄▀▄█▄█▀   ▄ █▀██ ▀▄ ▄▄▀▀▀▀█▀█ █▄  ▀▀ █  █▀ ▀ ▄██▀▄████
-████▄▄ █ █▄▄▄▄ █ ▄▄▀█▄▀█ ▀▄▀ ▄▄ ▀ ▄█ █▄▀▀▄█▀▄  ▀███▀▀ ▄██  █▄▄█▀█▄▄▄▀████
-████▀█▄ █▄▄█ █▀ ▄ ▀██ ▀ ▀▄▄▄▄██▄█▄▄▄█▄▄▄▀▀▄▀▄█▀ ▄█  ▄▀▄  ▀█  ▄█ ▄▄▀▄▄████
-█████▄▄█▄█▄█▀▄█ ▀ █▄ ▀▀▀▀▀█▄█▄▄ ▄█ ▄▄▄  ▀▄▀██▄▄▀█▄▀▀  █▄█ ▄█ ▄▄▄ █ █▀████
-████ ▄▄▄▄▄ █▄██▀▀█▀██▀▀▄█ ▄▀ ▄█▄█▀ █▄█    █▀▀▄█▄  █▄█▄▀█▀  █ █▄█ ▀▀▀▄████
-████ █   █ █ █ ▀▄█ ▀███▄██▄▄  ▄ █ ▄▄ ▄▄█ ▄▀▀█▀▄▄▀▀█▄▄▄▀▀▀█ █   ▄▄▄▀ █████
-████ █▄▄▄█ █  ▀▄ █▄▀█▀ ▄███▄  █ ▄ ▀█▄ ▄▀ ▀▄▀▀▄ █▀ ▄ ▀▄█▀▄█▀▄▄███▄▀▀ █████
-████▄▄▄▄▄▄▄█▄▄██▄▄█▄█▄█▄▄▄▄█▄▄▄██▄█████▄▄█▄▄▄█▄▄████████▄▄▄█▄████████████
-█████████████████████████████████████████████████████████████████████████
-█████████████████████████████████████████████████████████████████████████
-Scan QR code with your phone or use "wgclient_10.conf" file.
-Updating wghub.conf... done!
-
-Important: Deploy updated wghub.conf configuration to wireguard with wg-quick:
-  sudo wg-quick down ./wghub.conf # if already configured
-  sudo wg-quick up ./wghub.conf
-  sudo wg show # to check status
 ```
 
 ### Using generated configuration
 
 On hub configure Wireguard.
 
-    sudo wg-quick up ./wghub.conf
+    wg-quick up wg0
 
-On peer scan QR code or copy `wgclient_10.conf`. To display QR code again use
+On peer scan QR code or copy `etc/wireguard/peers/{peer_name}/wgc_{peer_name}.png`. 
 
-    qrencode -t ansiutf8 < wgclient_10.conf
+To display QR code again use
+
+    qrencode -t ansiutf8 < etc/wireguard/peers/{peer_name}/wgc_{peer_name}.conf
 
 Finally on hub check if everything works with `sudo wg show`.
 
@@ -180,7 +156,7 @@ peer: th8qYu0R0mgio2wPu1kz6/5OOgi6l8iy7OobK590LHw=
   transfer: 32.64 MiB received, 95.24 MiB sent
 ```
 
-## Fine tuning
+## Fine tuning - BELOW THIS POINT IS REFERENCE FROM EASY-WG-QUICK
 
 ### Disabling external interface autodetection
 
@@ -376,6 +352,8 @@ This project is licensed under the GPLv2 License - see the [LICENSE] file for
 details.
 
 ## Acknowledgments
+
+easy-wg-quick [] was the inspiration and source for this script.
 
 OpenVPN's [easy-rsa] was an inspiration for writing this script.
 
